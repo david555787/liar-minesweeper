@@ -1,3 +1,12 @@
+import {
+  createEmptyBoard,
+  placeMinesAvoidingCell,
+  computeTrueValues,
+  chooseLiar,
+  revealCell,
+  createBoardFromFixedLayout,
+} from './board.js';
+
 // Keep state independent of the DOM so controlled boards can test the rules later.
 export const gameState = {
   rows: 9,
@@ -10,30 +19,79 @@ export const gameState = {
   flagCount: 0,
   mode: 'reveal',
   status: 'ready',
+  debugMode: false,
+  fixedLayout: null,
+  debugError: '',
 };
 
 /** Reset a session without generating mines before the player's first reveal. */
 export function newGame() {
-  // TODO: Reset gameState to its defaults, create an empty board with
-  // createEmptyBoard, and clear flags, verification markers, and the result.
-  // Keep isBoardGenerated false until handleReveal receives an eligible cell.
+  // Preserve debug configuration so New Game can reproduce the same fixture.
+  Object.assign(gameState, {
+    rows: 9,
+    columns: 9,
+    mineCount: gameState.debugMode && gameState.fixedLayout
+      ? gameState.fixedLayout.mineCoordinates.length : 10,
+    board: createEmptyBoard(9, 9),
+    isBoardGenerated: false,
+    lives: 5,
+    verificationsLeft: 3,
+    flagCount: 0,
+    mode: 'reveal',
+    status: gameState.debugError || 'Ready — choose a cell.',
+  });
 }
 
 /** Coordinate reveals so board mechanics do not need lives or victory state. */
 export function handleReveal(row, column) {
-  // TODO: Ignore ended games; route verify-mode clicks to handleVerify.
-  // In reveal mode, ignore flagged/revealed cells. On the first eligible reveal,
-  // place mines avoiding it, compute true values, and choose the persistent liar
-  // before calling revealCell. Support a fixed debug layout at this same boundary.
-  // Deduct one life for each newly hit mine; the fifth distinct hit loses.
-  // Win when all safe cells are revealed. On either result, end interactions and
-  // expose remaining mines and the liar's true and original displayed values.
+  const cell = gameState.board[row]?.[column];
+  if (!cell || cell.isFlagged || cell.isRevealed || gameState.debugError) return;
+
+  if (!gameState.isBoardGenerated) {
+    if (gameState.debugMode && gameState.fixedLayout) {
+      const { mineCoordinates, liarCoordinate, liarDisplayedValue } = gameState.fixedLayout;
+      let fixedBoard;
+      try {
+        fixedBoard = createBoardFromFixedLayout(
+          mineCoordinates, liarCoordinate, liarDisplayedValue, 9, 9,
+        );
+      } catch (error) {
+        gameState.status = `Invalid debug layout: ${error.message}`;
+        return;
+      }
+      // A fixed fixture must stay exact while still honoring a safe first reveal.
+      if (fixedBoard[row][column].isMine) {
+        gameState.status = 'Debug layout: choose a safe cell for the first reveal.';
+        return;
+      }
+      for (const fixedCell of fixedBoard.flat()) {
+        fixedCell.isFlagged = gameState.board[fixedCell.row][fixedCell.column].isFlagged;
+      }
+      gameState.board = fixedBoard;
+    } else {
+      placeMinesAvoidingCell(gameState.board, gameState.mineCount, row, column);
+      computeTrueValues(gameState.board);
+      chooseLiar(gameState.board);
+    }
+    gameState.isBoardGenerated = true;
+  }
+
+  const newlyRevealedCells = revealCell(gameState.board, row, column);
+  gameState.status = newlyRevealedCells.some((revealedCell) => revealedCell.isMine)
+    ? 'Mine revealed — keep exploring.' : 'Exploring — one clue is mischievous.';
+  // TODO: Route verify-mode clicks to handleVerify when verification is added.
+  // TODO: Deduct lives only for newly revealed mines; the fifth distinct hit loses.
+  // TODO: Detect victory after every safe cell is revealed; on either result,
+  // stop interactions, show remaining mines, and expose both original liar values.
 }
 
 /** Treat flags as player notes rather than a correctness or victory check. */
 export function handleFlag(row, column) {
-  // TODO: Ignore ended games and revealed cells; toggle the covered cell's
-  // isFlagged field and update flagCount without checking whether it is a mine.
+  const cell = gameState.board[row]?.[column];
+  if (!cell || cell.isRevealed) return;
+  cell.isFlagged = !cell.isFlagged;
+  gameState.flagCount += cell.isFlagged ? 1 : -1;
+  // TODO: Ignore flag actions after victory or defeat is implemented.
 }
 
 /**

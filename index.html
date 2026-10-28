@@ -18,11 +18,11 @@
         <div><dt>Mines</dt><dd id="mines">10</dd></div>
         <div><dt>Flags</dt><dd id="flags">0</dd></div>
         <div><dt>Mode</dt><dd id="mode">Reveal</dd></div>
-        <div><dt>Status</dt><dd id="status">Skeleton — gameplay coming soon</dd></div>
+        <div><dt>Status</dt><dd id="status">Ready — choose a cell.</dd></div>
       </dl>
 
       <div id="controls">
-        <button id="verify-button" type="button" aria-pressed="false">Verify</button>
+        <button id="verify-button" type="button" aria-pressed="false" disabled>Verify</button>
         <button id="new-game-button" type="button">New Game</button>
       </div>
 
@@ -32,8 +32,7 @@
         <h2 id="rules-heading">Rules &amp; controls</h2>
         <p>Left-click to reveal; right-click to flag or unflag. Unflag a cell before revealing it. Your first reveal is safe.</p>
         <p>Exactly one safe cell lies by +1 or −1. Flood fill follows true values, so a true zero expands even if its clue says 1.</p>
-        <p>Click Verify, then a revealed, unverified safe cell to see its true value. You get 3 verifications; click Verify again to cancel.</p>
-        <p>You have 5 lives. Each distinct mine hit costs one life. Reveal every safe cell to win; finding the liar is optional.</p>
+        <p>This version supports revealing and flagging. Verification, lives, and win/defeat are coming next; the lives and verification counters stay at their initial values.</p>
       </section>
     </main>
   </body>

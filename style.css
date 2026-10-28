@@ -63,6 +63,55 @@ button:focus-visible {
   grid-template-columns: repeat(9, minmax(0, 1fr));
   max-width: 27rem;
   margin: 1.5rem 0;
+  gap: 3px;
+}
+
+.cell {
+  min-width: 0;
+  aspect-ratio: 1;
+  padding: 0;
+  border-radius: 0.25rem;
+  font-size: clamp(1rem, 4vw, 1.3rem);
+  font-weight: 650;
+  line-height: 1;
+}
+
+.cell.is-covered {
+  background: #dce9df;
+}
+
+.cell.is-covered:hover {
+  background: #cbded0;
+}
+
+.cell.is-flagged {
+  color: #78591c;
+  background: #fff0c9;
+}
+
+.cell.is-revealed {
+  background: #fff;
+  border-color: #dce5df;
+}
+
+.cell.is-mine {
+  color: #8c4141;
+  background: #f7dedb;
+}
+
+.cell[data-value="0"] { color: #596b66; }
+.cell[data-value="1"] { color: #386f9b; }
+.cell[data-value="2"] { color: #397555; }
+.cell[data-value="3"] { color: #a2504b; }
+.cell[data-value="4"] { color: #75629c; }
+.cell[data-value="5"] { color: #91643e; }
+.cell[data-value="6"] { color: #367b7b; }
+.cell[data-value="7"] { color: #75546a; }
+.cell[data-value="8"] { color: #626b72; }
+
+button:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 #rules {
