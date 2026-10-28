@@ -1,0 +1,70 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #30413c;
+  background: #f7faf6;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  padding: 1.5rem;
+}
+
+main {
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+h1,
+h2 {
+  line-height: 1.2;
+}
+
+#status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  padding: 1rem;
+  background: #eaf2eb;
+  border-radius: 0.5rem;
+}
+
+dt {
+  font-size: 0.875rem;
+}
+
+dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+#controls {
+  display: flex;
+  gap: 0.75rem;
+}
+
+button {
+  padding: 0.5rem 0.875rem;
+  font: inherit;
+  color: inherit;
+  background: #fff;
+  border: 1px solid #a7b9ae;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px solid #467a69;
+  outline-offset: 3px;
+}
+
+#board {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  max-width: 27rem;
+  margin: 1.5rem 0;
+}
+
+#rules {
+  max-width: 42rem;
+}

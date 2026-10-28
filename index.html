@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Liar Minesweeper</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="js/main.js"></script>
+  </head>
+  <body>
+    <main id="game">
+      <h1>Liar Minesweeper</h1>
+      <p>One clue is a little mischievous.</p>
+
+      <dl id="status-bar" aria-label="Game information" aria-live="polite">
+        <div><dt>Lives</dt><dd id="lives">5</dd></div>
+        <div><dt>Verifications left</dt><dd id="verifications-left">3</dd></div>
+        <div><dt>Mines</dt><dd id="mines">10</dd></div>
+        <div><dt>Flags</dt><dd id="flags">0</dd></div>
+        <div><dt>Mode</dt><dd id="mode">Reveal</dd></div>
+        <div><dt>Status</dt><dd id="status">Skeleton — gameplay coming soon</dd></div>
+      </dl>
+
+      <div id="controls">
+        <button id="verify-button" type="button" aria-pressed="false">Verify</button>
+        <button id="new-game-button" type="button">New Game</button>
+      </div>
+
+      <div id="board" aria-label="Minesweeper board"></div>
+
+      <section id="rules" aria-labelledby="rules-heading">
+        <h2 id="rules-heading">Rules &amp; controls</h2>
+        <p>Left-click to reveal; right-click to flag or unflag. Unflag a cell before revealing it. Your first reveal is safe.</p>
+        <p>Exactly one safe cell lies by +1 or −1. Flood fill follows true values, so a true zero expands even if its clue says 1.</p>
+        <p>Click Verify, then a revealed, unverified safe cell to see its true value. You get 3 verifications; click Verify again to cancel.</p>
+        <p>You have 5 lives. Each distinct mine hit costs one life. Reveal every safe cell to win; finding the liar is optional.</p>
+      </section>
+    </main>
+  </body>
+</html>
