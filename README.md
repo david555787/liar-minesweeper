@@ -41,7 +41,11 @@ node js/board.test.js
 node js/game.test.js
 ```
 
-Both suites passed during this handoff: 16 board tests and 26 game tests, using Node v26.8.2 and built-in `assert`. Other Node versions are **not verified**. These suites test logic and state, not browser rendering or browser events.
+Both suites were rerun and passed during the October 28, 2026 handoff review: 16 board tests and 26 game tests, using Node v26.8.2 and built-in `assert`. Other Node versions are **not verified**. These suites test logic and state, not browser rendering or browser events.
+
+Additional one-off Node checks passed during that review: fixed-layout generation stays deferred after a first click on a fixture mine; flags placed before generation survive fixture loading; verifying the liar preserves its original clue; New Game retains the fixture configuration and defers generation; and 100 generated games won after revealing every safe cell. These checks were run separately and are not part of the committed test suites.
+
+Browser acceptance remains pending. The review environment could not start a local HTTP server because binding the listening socket was denied, so no browser results are claimed below.
 
 ## Controls
 
@@ -52,26 +56,26 @@ Both suites passed during this handoff: 16 board tests and 26 game tests, using 
 
 ## Acceptance criteria status
 
-No author self-check results or observed-bug list accompanied the handoff request. Therefore no criterion is marked Done. **Not verified** below means author acceptance is unconfirmed, even where the automated logic checks pass; it does not mean the feature is absent. Notes describe coverage in the committed tests.
+The core rules are implemented, and all 42 committed automated tests pass. The table separates automated evidence from browser acceptance: **Passed (logic)** covers the listed state or board checks; **Partial** means the criterion also contains behavior outside those tests. **Pending** means browser acceptance has not been performed, not that the feature is missing. No criterion is claimed fully accepted until its remaining checks are completed.
 
-| # | Criterion | Status | Evidence / remaining check |
-|---|---|---|---|
-| 1 | Debug values and fixed layouts | Not verified | Fixed-layout builder tested; URL parsing and browser tooltips not covered. |
-| 2 | 81 covered cells; 10 mines after generation | Not verified | Cell structure and repeated mine counts tested; visible grid not covered. |
-| 3 | Safe first reveal at corner, edge, interior | Not verified | Each position tested on 300 generated boards. |
-| 4 | Reveal, flag, blocked flagged reveals, no context menu | Not verified | State operations tested; mouse events and menu suppression not covered. |
-| 5 | Correct true values at edges and diagonals | Not verified | A hand-made 3-by-4 layout checks expected counts. |
-| 6 | Exactly one safe liar off by 1; all safe cells eligible | Not verified | 500 generated boards plus controlled selection draws; natural occurrence frequencies not measured. |
-| 7 | Boundary offsets and persistent liar | Not verified | 0/8 offsets, both branches for 1–7, identity, and original clue tested. |
-| 8 | True-zero flood fill skips mines and flags | Not verified | Expected region/boundary and a blocking flag tested. |
-| 9 | True-0 liar expands; true-1 liar does not; explicit zero | Not verified | Expansion behavior tested; explicit-zero browser rendering not covered. |
-| 10 | Verification use, marker, cancellation, invalid targets, zero limit | Not verified | State transitions tested; visible marker and disabled button not covered. |
-| 11 | Verify liar without replacing it or expanding neighbors | Not verified | Identity, original clue, corrected clue, and unchanged reveal mask tested. |
-| 12 | Five distinct mine hits; repeated hits free; clues stable | Not verified | Four continuing hits, fifth-hit defeat, repeat hits, and clue stability tested. |
-| 13 | All safe cells wins; flags alone do not | Not verified | Last-cell/flood-fill wins and flag-only non-victory tested. |
-| 14 | End locks actions, exposes mines and both liar values | Not verified | Locks, mine exposure, unopened liar, and verified-liar result data tested; browser highlight not covered. |
-| 15 | New Game clears state and defers generation | Not verified | Resets after both outcomes and subsequent safe generation tested. |
-| 16 | Rules and all status fields match state | Not verified | Summary tested through an action sequence; browser text, layout, and DOM updates not covered. |
+| # | Criterion | Automated tests | Browser acceptance | Evidence / remaining check |
+|---|---|---|---|---|
+| 1 | Debug values and fixed layouts | Partial | Pending | Fixed-layout builder tested; check URL parsing, fixture loading, and debug tooltips/labels in the browser. |
+| 2 | 81 covered cells; 10 mines after generation | Passed (logic) | Pending | Cell structure and repeated mine counts tested; check the visible 9-by-9 grid. |
+| 3 | Safe first reveal at corner, edge, interior | Passed (logic) | Pending | Each position tested on 300 generated boards; confirm click handling in the browser. |
+| 4 | Reveal, flag, blocked flagged reveals, no context menu | Partial | Pending | State operations tested; check left/right mouse events and context-menu suppression. |
+| 5 | Correct true values at edges and diagonals | Passed (logic) | Pending | A hand-made 3-by-4 layout checks expected counts; inspect browser clues on a fixed layout. |
+| 6 | Exactly one safe liar off by 1; all safe cells eligible | Passed (logic) | Pending | 500 generated boards plus controlled selection draws; natural occurrence frequencies not measured. Inspect generated debug values. |
+| 7 | Boundary offsets and persistent liar | Passed (logic) | Pending | 0/8 offsets, both branches for 1–7, identity, and original clue tested; confirm displayed clues during play and verification. |
+| 8 | True-zero flood fill skips mines and flags | Passed (logic) | Pending | Expected region/boundary and a blocking flag tested; confirm the visible opened region. |
+| 9 | True-0 liar expands; true-1 liar does not; explicit zero | Partial | Pending | Expansion behavior tested; check explicit-zero and honest blank rendering. |
+| 10 | Verification use, marker, cancellation, invalid targets, zero limit | Partial | Pending | State transitions tested; check the visible marker, counter, mode, and disabled button. |
+| 11 | Verify liar without replacing it or expanding neighbors | Passed (logic) | Pending | Identity, original clue, corrected clue, and unchanged reveal mask tested; confirm the visible update. |
+| 12 | Five distinct mine hits; repeated hits free; clues stable | Passed (logic) | Pending | Four continuing hits, fifth-hit defeat, repeat hits, and clue stability tested; confirm counters and feedback. |
+| 13 | All safe cells wins; flags alone do not | Passed (logic) | Pending | Last-cell/flood-fill wins and flag-only non-victory tested; confirm the visible outcome. |
+| 14 | End locks actions, exposes mines and both liar values | Partial | Pending | Locks, mine exposure, unopened liar, and verified-liar result data tested; check disabled controls, highlighting, and both visible values. |
+| 15 | New Game clears state and defers generation | Passed (logic) | Pending | Resets after both outcomes and subsequent safe generation tested; confirm the visible reset. |
+| 16 | Rules and all status fields match state | Partial | Pending | Summary tested through an action sequence; check rules text, layout, and DOM updates. |
 
 ## Code map
 
@@ -92,17 +96,17 @@ Cells retain separate `trueValue`, `displayedValue`, and `originalDisplayedValue
 
 ## Next steps in priority order
 
-1. Validate criteria 1–9 in the browser first, following SPEC.md's highest priority. Check fixed debug URLs, the initial grid, left/right clicks, context-menu suppression, blank versus explicit-zero clues, and true-value expansion. Record author self-check results and fix any observed failures before marking criteria Done.
+1. Validate criteria 1–9 in the browser first, following SPEC.md's highest priority. Check fixed debug URLs, the initial grid, left/right clicks, context-menu suppression, blank versus explicit-zero clues, and true-value expansion. Record the browser/version, date, and pass/fail result for each check in the table, and fix any observed failures before marking a criterion fully accepted.
 2. Validate criteria 10–15 next: verification controls/markers, five distinct hits, winning from the final safe reveal, locked end-game controls, both liar values, and New Game. Repeat the end-screen checks with an unopened liar and an already verified liar.
 3. Validate criterion 16: read the collapsed rules, then compare every visible counter, mode, and status with state through the action sequence. The summary test does not validate the DOM.
 4. Only after core acceptance, consider SPEC.md's optional extensions in order: difficulty selection, informational elapsed time, sound/mute, suspicious markers, then a guaranteed-solvable generator. None is implemented in the current code.
 
 ## Known bugs and shortcuts
 
-No observed bugs were supplied in the handoff request; this is not a claim that the game is bug-free. No TODO comments were found in `index.html`, `style.css`, or `js/*.js`. Browser behavior remains **not verified** by the committed test suites.
+The October 28, 2026 code review and Node checks found no blocking core-logic bug. This is not a claim that the game is bug-free; browser acceptance is still pending. No TODO comments were found in `index.html`, `style.css`, or `js/*.js`. Browser behavior remains **not verified** by the committed test suites.
 
 The random board generator can produce boards that require guessing. No solver or guaranteed-solvable generator exists; SPEC.md explicitly treats that generator as an optional extension.
 
 ## Source of truth
 
-`SPEC.md` is the source of truth for intended behavior. This README describes the current code, test coverage, and unconfirmed acceptance status.
+`SPEC.md` is the source of truth for intended behavior. This README describes the current code, test coverage, and remaining browser acceptance work.
