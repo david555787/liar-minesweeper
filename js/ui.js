@@ -45,11 +45,12 @@ export function renderBoard(gameState) {
         button.textContent = '✹';
         description = 'revealed mine';
       } else {
-        button.dataset.value = cell.displayedValue;
+        const clueValue = cell.isVerified ? cell.trueValue : cell.displayedValue;
+        button.dataset.value = clueValue;
         // A displayed zero is evidence of a lie, unlike an honest blank zero.
-        const isBlank = cell.trueValue === 0 && !cell.isLiar;
-        button.textContent = isBlank ? '' : String(cell.displayedValue);
-        description = isBlank ? 'blank' : `clue ${cell.displayedValue}`;
+        const isBlank = cell.trueValue === 0 && !cell.isLiar && !cell.isVerified;
+        button.textContent = isBlank ? '' : String(clueValue);
+        description = isBlank ? 'blank' : `clue ${clueValue}`;
       }
     } else if (cell.isFlagged) {
       button.classList.add('is-flagged');
@@ -57,6 +58,15 @@ export function renderBoard(gameState) {
       description = 'flagged';
     } else {
       button.classList.add('is-covered');
+    }
+    if (cell.isVerified) {
+      button.classList.add('is-verified');
+      const verifiedMarker = document.createElement('span');
+      verifiedMarker.className = 'verified-marker';
+      verifiedMarker.textContent = '✓';
+      verifiedMarker.setAttribute('aria-hidden', 'true');
+      button.append(verifiedMarker);
+      description += ', verified';
     }
     const accessibleLabel = `Row ${cell.row + 1}, column ${cell.column + 1}: ${description}`;
     button.setAttribute('aria-label', accessibleLabel);
@@ -75,7 +85,6 @@ export function renderBoard(gameState) {
   if (focusedCell) {
     boardElement.querySelector(`[data-row="${focusedRow}"][data-column="${focusedColumn}"]`)?.focus();
   }
-  // TODO: Render permanent verified markers and true values after verification.
 }
 
 /** Reflect state consistently so counters never imply a different ruleset. */
@@ -84,13 +93,15 @@ export function renderStatus(gameState) {
   document.getElementById('verifications-left').textContent = gameState.verificationsLeft;
   document.getElementById('mines').textContent = gameState.mineCount;
   document.getElementById('flags').textContent = gameState.flagCount;
-  document.getElementById('mode').textContent = gameState.debugMode ? 'Reveal (debug)' : 'Reveal';
+  const modeLabel = gameState.mode === 'verify' ? 'Verify' : 'Reveal';
+  document.getElementById('mode').textContent = gameState.debugMode ? `${modeLabel} (debug)` : modeLabel;
   const statusLabel = { playing: 'Playing', won: 'Won', lost: 'Lost' }[gameState.status];
   document.getElementById('status').textContent = `${statusLabel} — ${gameState.message}`;
   const verifyButton = document.getElementById('verify-button');
-  verifyButton.disabled = true;
-  verifyButton.title = 'Verification is coming in a later step.';
-  // TODO: Enable verification mode, sync aria-pressed, and disable at zero uses.
+  verifyButton.disabled = gameState.status !== 'playing' || gameState.verificationsLeft === 0;
+  verifyButton.setAttribute('aria-pressed', String(gameState.mode === 'verify'));
+  verifyButton.title = gameState.mode === 'verify'
+    ? 'Cancel verification without using a verification.' : 'Check a revealed safe cell’s true value.';
 }
 
 /**
@@ -114,5 +125,8 @@ export function attachEventHandlers(handlers) {
     }
   };
   document.getElementById('new-game-button').onclick = () => handlers.onNewGame();
-  // TODO: Connect #verify-button to handlers.onVerify when verification is added.
+  const verifyButton = document.getElementById('verify-button');
+  verifyButton.onclick = () => {
+    if (!verifyButton.disabled) handlers.onVerify();
+  };
 }

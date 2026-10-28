@@ -22,7 +22,7 @@
       </dl>
 
       <div id="controls">
-        <button id="verify-button" type="button" aria-pressed="false" disabled>Verify</button>
+        <button id="verify-button" type="button" aria-pressed="false">Verify</button>
         <button id="new-game-button" type="button">New Game</button>
       </div>
 
@@ -34,7 +34,7 @@
         <p>Left-click to reveal; right-click to flag or unflag. Unflag a cell before revealing it. Your first reveal is safe.</p>
         <p>Exactly one safe cell lies by +1 or −1. Flood fill follows true values, so a true zero expands even if its clue says 1.</p>
         <p>You have 5 lives. Each newly revealed mine costs one life. Reveal every safe cell to win; finding the liar is optional. At the end, all mines and the liar's original clue are shown.</p>
-        <p>Verification is coming next; its counter stays at 3 for now.</p>
+        <p>You have 3 verifications. Click Verify, then a revealed safe cell to see its true value and a permanent ✓ marker. Click Verify again to cancel for free. Covered cells, mines, and already verified cells use nothing and leave verification mode on. Verification never opens neighbors.</p>
       </section>
     </main>
   </body>

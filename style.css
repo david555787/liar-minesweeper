@@ -67,6 +67,7 @@ button:focus-visible {
 }
 
 .cell {
+  position: relative;
   min-width: 0;
   aspect-ratio: 1;
   padding: 0;
@@ -97,6 +98,23 @@ button:focus-visible {
 .cell.is-mine {
   color: #8c4141;
   background: #f7dedb;
+}
+
+.cell.is-verified {
+  box-shadow: inset 0 0 0 2px #5d8775;
+}
+
+.verified-marker {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 0.65rem;
+  color: #35644d;
+}
+
+#verify-button[aria-pressed="true"] {
+  background: #e0ecf5;
+  border-color: #6689a3;
 }
 
 .cell[data-value="0"] { color: #596b66; }

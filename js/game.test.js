@@ -170,14 +170,160 @@ for (const result of ['won', 'lost']) {
 test('end result retains the original lie even if its displayed clue was corrected', () => {
   loadControlledBoard();
   const liar = gameState.board[4][4];
-  // Simulate future verification data without implementing verification actions.
-  liar.displayedValue = liar.trueValue;
-  liar.isVerified = true;
+  liar.isRevealed = true;
+  handleVerify();
+  handleReveal(4, 4);
   loseGame();
   assert.equal(gameState.result.trueValue, 0);
   assert.equal(gameState.result.originalDisplayedValue, 1);
   assert.equal(liar.displayedValue, 0);
   assert.equal(liar.originalDisplayedValue, 1);
 });
+
+test('valid verification uses exactly one charge, marks the cell, and returns to reveal', () => {
+  loadControlledBoard();
+  handleReveal(1, 1);
+  handleVerify();
+  assert.equal(gameState.mode, 'verify');
+  handleReveal(1, 1);
+  assert.equal(gameState.verificationsLeft, 2);
+  assert.equal(gameState.board[1][1].isVerified, true);
+  assert.equal(gameState.board[1][1].displayedValue, gameState.board[1][1].trueValue);
+  assert.equal(gameState.mode, 'reveal');
+  assert.equal(gameState.lives, 5);
+  assert.equal(gameState.status, 'playing');
+  handleVerify(1, 3);
+  assert.equal(gameState.verificationsLeft, 2);
+  assert.equal(gameState.board[1][3].isVerified, false);
+});
+
+test('cancelling verify mode uses nothing and leaves the board unchanged', () => {
+  loadControlledBoard();
+  const originalBoard = JSON.stringify(gameState.board);
+  handleVerify();
+  assert.equal(gameState.mode, 'verify');
+  handleVerify();
+  assert.equal(gameState.mode, 'reveal');
+  assert.equal(gameState.verificationsLeft, 3);
+  assert.equal(JSON.stringify(gameState.board), originalBoard);
+});
+
+for (const target of ['covered safe cell', 'covered mine', 'hit mine', 'already verified cell']) {
+  test(`verify-mode click on ${target} uses nothing and stays in verify mode`, () => {
+    loadControlledBoard();
+    let row = 1;
+    let column = 1;
+    if (target.includes('mine')) {
+      row = 0;
+      column = 0;
+      if (target === 'hit mine') handleReveal(row, column);
+    } else if (target === 'already verified cell') {
+      handleReveal(row, column);
+      handleVerify();
+      handleReveal(row, column);
+    }
+    handleVerify();
+    const originalState = JSON.stringify(gameState);
+    handleReveal(row, column);
+    assert.equal(JSON.stringify(gameState), originalState);
+    assert.equal(gameState.mode, 'verify');
+  });
+}
+
+test('the third verification leaves zero charges and no further verification is possible', () => {
+  loadControlledBoard();
+  for (const column of [1, 3, 5]) {
+    handleReveal(1, column);
+    handleVerify();
+    handleReveal(1, column);
+  }
+  assert.equal(gameState.verificationsLeft, 0);
+  assert.equal(gameState.mode, 'reveal');
+  handleReveal(1, 7);
+  const originalState = JSON.stringify(gameState);
+  handleVerify();
+  handleVerify(1, 7);
+  assert.equal(JSON.stringify(gameState), originalState);
+  assert.equal(gameState.board[1][7].isVerified, false);
+});
+
+test('verifying the liar corrects its clue without moving it or erasing the original lie', () => {
+  loadControlledBoard();
+  const liar = gameState.board[4][4];
+  liar.isRevealed = true;
+  handleVerify();
+  handleReveal(4, 4);
+  assert.equal(liar.displayedValue, liar.trueValue);
+  assert.equal(liar.originalDisplayedValue, 1);
+  assert.equal(liar.isLiar, true);
+  assert.equal(liar.isVerified, true);
+  assert.equal(gameState.board[4][4], liar);
+  assert.deepEqual(gameState.board.flat().filter(cell => cell.isLiar), [liar]);
+});
+
+test('verifying a true-zero cell never opens any neighbors or changes game outcomes', () => {
+  loadControlledBoard();
+  const zeroCell = gameState.board[8][8];
+  zeroCell.isRevealed = true;
+  assert.equal(zeroCell.trueValue, 0);
+  const revealedBefore = gameState.board.flat().map(cell => cell.isRevealed);
+  handleVerify();
+  handleReveal(8, 8);
+  assert.deepEqual(gameState.board.flat().map(cell => cell.isRevealed), revealedBefore);
+  assert.equal(zeroCell.isVerified, true);
+  assert.equal(zeroCell.displayedValue, 0);
+  assert.equal(gameState.status, 'playing');
+});
+
+test('verification before the first reveal cannot generate or reveal a board', () => {
+  loadControlledBoard();
+  newGame();
+  handleVerify();
+  handleReveal(4, 4);
+  assert.equal(gameState.isBoardGenerated, false);
+  assert.equal(gameState.verificationsLeft, 3);
+  assert.equal(gameState.mode, 'verify');
+  assert.ok(gameState.board.flat().every(cell => !cell.isMine && !cell.isRevealed));
+});
+
+test('New Game restores three verifications, reveal mode, and clears verified markers', () => {
+  loadControlledBoard();
+  handleReveal(1, 1);
+  handleVerify();
+  handleReveal(1, 1);
+  assert.equal(gameState.board[1][1].isVerified, true);
+  handleVerify();
+  assert.equal(gameState.mode, 'verify');
+  newGame();
+  assert.equal(gameState.verificationsLeft, 3);
+  assert.equal(gameState.mode, 'reveal');
+  assert.ok(gameState.board.flat().every(cell => !cell.isVerified));
+  assert.equal(gameState.isBoardGenerated, false);
+});
+
+for (const outcome of ['won', 'lost']) {
+  test(`verified liar keeps both end-screen values after ${outcome}, with verification disabled`, () => {
+    loadControlledBoard();
+    const liar = gameState.board[4][4];
+    liar.isRevealed = true;
+    handleVerify();
+    handleReveal(4, 4);
+    if (outcome === 'won') {
+      leaveLastSafeCellCovered();
+      handleReveal(1, 1);
+    } else {
+      loseGame();
+    }
+    assert.equal(gameState.status, outcome);
+    assert.equal(gameState.result.trueValue, 0);
+    assert.equal(gameState.result.originalDisplayedValue, 1);
+    assert.equal(liar.isVerified, true);
+    assert.equal(gameState.mode, 'reveal');
+    const originalState = JSON.stringify(gameState);
+    handleVerify();
+    handleVerify(1, 1);
+    assert.equal(JSON.stringify(gameState), originalState);
+  });
+}
 
 console.log(`\n${passedTests} tests passed.`);

@@ -49,6 +49,11 @@ export function newGame() {
 /** Coordinate reveals so board mechanics do not need lives or victory state. */
 export function handleReveal(row, column) {
   if (gameState.status !== 'playing') return;
+  // Verify clicks must reach revealed cells without entering the reveal path.
+  if (gameState.mode === 'verify') {
+    handleVerify(row, column);
+    return;
+  }
   const cell = gameState.board[row]?.[column];
   if (!cell || cell.isFlagged || cell.isRevealed || gameState.debugError) return;
 
@@ -93,7 +98,6 @@ export function handleReveal(row, column) {
     gameState.message = newlyHitMines > 0
       ? 'A little bump! You can keep exploring.' : 'One clue is mischievous. Take your time.';
   }
-  // TODO: Route verify-mode clicks to handleVerify when verification is added.
 }
 
 /** Treat flags as player notes rather than a correctness or victory check. */
@@ -110,15 +114,28 @@ export function handleFlag(row, column) {
  * Omit coordinates to toggle mode; provide both to attempt a verification.
  */
 export function handleVerify(row, column) {
-  if (gameState.status !== 'playing') return;
-  // TODO: With no coordinates, toggle reveal/verify mode
-  // only when verificationsLeft > 0. For a target in verify mode, accept only a
-  // revealed, unverified safe cell; invalid targets consume nothing.
-  // On success, decrement verificationsLeft, set isVerified, show trueValue,
-  // preserve originalDisplayedValue, and return to reveal mode. Never flood fill.
+  if (gameState.status !== 'playing' || gameState.verificationsLeft <= 0) return;
+  if (row === undefined && column === undefined) {
+    gameState.mode = gameState.mode === 'verify' ? 'reveal' : 'verify';
+    gameState.message = gameState.mode === 'verify'
+      ? 'Choose a revealed safe cell to check its clue. Click Verify again to cancel.'
+      : 'Back to exploring — no verification used.';
+    return;
+  }
+  if (gameState.mode !== 'verify') return;
+  const cell = gameState.board[row]?.[column];
+  // Invalid clicks keep verify mode on so a misclick never wastes a use or
+  // unexpectedly reveals a covered cell; the player can choose another target.
+  if (!cell || !cell.isRevealed || cell.isMine || cell.isVerified) return;
+  cell.isVerified = true;
+  cell.displayedValue = cell.trueValue;
+  gameState.verificationsLeft -= 1;
+  gameState.mode = 'reveal';
+  gameState.message = 'Clue checked! The check mark means you can trust this value.';
+  // Updating only this clue preserves the original lie and never triggers flood fill.
 }
 
-/** Preserve the original clue so an eventual verification cannot erase the punchline. */
+/** Preserve the original clue so verification cannot erase the punchline. */
 function finishGame(status) {
   gameState.status = status;
   gameState.mode = 'reveal';
