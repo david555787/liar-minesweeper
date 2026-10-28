@@ -308,8 +308,6 @@ Required sections:
 Style: plain, concise, no marketing language, no emoji. Every sentence must be
 true of the current repo.
 
-
-
 When done, list any statement in the README you could not verify from the
 code or my notes.
 ```
