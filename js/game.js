@@ -18,7 +18,9 @@ export const gameState = {
   verificationsLeft: 3,
   flagCount: 0,
   mode: 'reveal',
-  status: 'ready',
+  status: 'playing',
+  message: 'Ready — choose a cell.',
+  result: null,
   debugMode: false,
   fixedLayout: null,
   debugError: '',
@@ -38,12 +40,15 @@ export function newGame() {
     verificationsLeft: 3,
     flagCount: 0,
     mode: 'reveal',
-    status: gameState.debugError || 'Ready — choose a cell.',
+    status: 'playing',
+    message: gameState.debugError || 'Ready — choose a cell.',
+    result: null,
   });
 }
 
 /** Coordinate reveals so board mechanics do not need lives or victory state. */
 export function handleReveal(row, column) {
+  if (gameState.status !== 'playing') return;
   const cell = gameState.board[row]?.[column];
   if (!cell || cell.isFlagged || cell.isRevealed || gameState.debugError) return;
 
@@ -56,12 +61,12 @@ export function handleReveal(row, column) {
           mineCoordinates, liarCoordinate, liarDisplayedValue, 9, 9,
         );
       } catch (error) {
-        gameState.status = `Invalid debug layout: ${error.message}`;
+        gameState.message = `Invalid debug layout: ${error.message}`;
         return;
       }
       // A fixed fixture must stay exact while still honoring a safe first reveal.
       if (fixedBoard[row][column].isMine) {
-        gameState.status = 'Debug layout: choose a safe cell for the first reveal.';
+        gameState.message = 'Debug layout: choose a safe cell for the first reveal.';
         return;
       }
       for (const fixedCell of fixedBoard.flat()) {
@@ -77,21 +82,27 @@ export function handleReveal(row, column) {
   }
 
   const newlyRevealedCells = revealCell(gameState.board, row, column);
-  gameState.status = newlyRevealedCells.some((revealedCell) => revealedCell.isMine)
-    ? 'Mine revealed — keep exploring.' : 'Exploring — one clue is mischievous.';
+  const newlyHitMines = newlyRevealedCells.filter((revealedCell) => revealedCell.isMine).length;
+  // Only this reveal's hits cost lives; exposing mines at the end costs nothing.
+  gameState.lives -= newlyHitMines;
+  if (gameState.lives === 0) {
+    finishGame('lost');
+  } else if (gameState.board.flat().every((boardCell) => boardCell.isMine || boardCell.isRevealed)) {
+    finishGame('won');
+  } else {
+    gameState.message = newlyHitMines > 0
+      ? 'A little bump! You can keep exploring.' : 'One clue is mischievous. Take your time.';
+  }
   // TODO: Route verify-mode clicks to handleVerify when verification is added.
-  // TODO: Deduct lives only for newly revealed mines; the fifth distinct hit loses.
-  // TODO: Detect victory after every safe cell is revealed; on either result,
-  // stop interactions, show remaining mines, and expose both original liar values.
 }
 
 /** Treat flags as player notes rather than a correctness or victory check. */
 export function handleFlag(row, column) {
+  if (gameState.status !== 'playing') return;
   const cell = gameState.board[row]?.[column];
   if (!cell || cell.isRevealed) return;
   cell.isFlagged = !cell.isFlagged;
   gameState.flagCount += cell.isFlagged ? 1 : -1;
-  // TODO: Ignore flag actions after victory or defeat is implemented.
 }
 
 /**
@@ -99,9 +110,29 @@ export function handleFlag(row, column) {
  * Omit coordinates to toggle mode; provide both to attempt a verification.
  */
 export function handleVerify(row, column) {
-  // TODO: Ignore ended games. With no coordinates, toggle reveal/verify mode
+  if (gameState.status !== 'playing') return;
+  // TODO: With no coordinates, toggle reveal/verify mode
   // only when verificationsLeft > 0. For a target in verify mode, accept only a
   // revealed, unverified safe cell; invalid targets consume nothing.
   // On success, decrement verificationsLeft, set isVerified, show trueValue,
   // preserve originalDisplayedValue, and return to reveal mode. Never flood fill.
+}
+
+/** Preserve the original clue so an eventual verification cannot erase the punchline. */
+function finishGame(status) {
+  gameState.status = status;
+  gameState.mode = 'reveal';
+  const liar = gameState.board.flat().find((cell) => cell.isLiar);
+  gameState.result = {
+    liarRow: liar.row,
+    liarColumn: liar.column,
+    trueValue: liar.trueValue,
+    originalDisplayedValue: liar.originalDisplayedValue,
+  };
+  for (const cell of gameState.board.flat()) {
+    if (cell.isMine || cell.isLiar) cell.isRevealed = true;
+  }
+  gameState.message = status === 'won'
+    ? 'Lovely detective work! Every safe cell is clear.'
+    : 'Out of lives — the mischievous clue has been unmasked. Fancy another round?';
 }

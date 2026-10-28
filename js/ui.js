@@ -2,7 +2,13 @@
 export function renderGame(gameState) {
   renderBoard(gameState);
   renderStatus(gameState);
-  // TODO: Present friendly result feedback and both liar values when the game ends.
+  const resultElement = document.getElementById('game-result');
+  resultElement.hidden = !gameState.result;
+  resultElement.textContent = gameState.result
+    ? `The cheeky liar was at row ${gameState.result.liarRow + 1}, ` +
+      `column ${gameState.result.liarColumn + 1}! Its true value is ` +
+      `${gameState.result.trueValue}; its original displayed value was ` +
+      `${gameState.result.originalDisplayedValue}.` : '';
 }
 
 /** Preserve visible evidence, including explicit liar zeroes and verification. */
@@ -13,6 +19,7 @@ export function renderBoard(gameState) {
   const focusedRow = focusedCell?.dataset.row;
   const focusedColumn = focusedCell?.dataset.column;
   const fragment = document.createDocumentFragment();
+  const isGameOver = gameState.status === 'won' || gameState.status === 'lost';
 
   for (const cell of gameState.board.flat()) {
     const button = document.createElement('button');
@@ -20,8 +27,18 @@ export function renderBoard(gameState) {
     button.className = 'cell';
     button.dataset.row = cell.row;
     button.dataset.column = cell.column;
+    button.disabled = isGameOver;
     let description = 'covered';
-    if (cell.isRevealed) {
+    if (isGameOver && cell.isLiar) {
+      button.classList.add('is-revealed', 'is-liar');
+      const trueClue = document.createElement('span');
+      trueClue.textContent = `True ${cell.trueValue}`;
+      const originalClue = document.createElement('span');
+      originalClue.textContent = `Was ${cell.originalDisplayedValue}`;
+      button.append(trueClue, originalClue);
+      description = `liar, true value ${cell.trueValue}, original displayed value ${cell.originalDisplayedValue}`;
+      button.title = description;
+    } else if (cell.isRevealed) {
       button.classList.add('is-revealed');
       if (cell.isMine) {
         button.classList.add('is-mine');
@@ -59,7 +76,6 @@ export function renderBoard(gameState) {
     boardElement.querySelector(`[data-row="${focusedRow}"][data-column="${focusedColumn}"]`)?.focus();
   }
   // TODO: Render permanent verified markers and true values after verification.
-  // TODO: Show remaining mines and both liar values after victory or defeat.
 }
 
 /** Reflect state consistently so counters never imply a different ruleset. */
@@ -69,12 +85,12 @@ export function renderStatus(gameState) {
   document.getElementById('mines').textContent = gameState.mineCount;
   document.getElementById('flags').textContent = gameState.flagCount;
   document.getElementById('mode').textContent = gameState.debugMode ? 'Reveal (debug)' : 'Reveal';
-  document.getElementById('status').textContent = gameState.status;
+  const statusLabel = { playing: 'Playing', won: 'Won', lost: 'Lost' }[gameState.status];
+  document.getElementById('status').textContent = `${statusLabel} — ${gameState.message}`;
   const verifyButton = document.getElementById('verify-button');
   verifyButton.disabled = true;
   verifyButton.title = 'Verification is coming in a later step.';
   // TODO: Enable verification mode, sync aria-pressed, and disable at zero uses.
-  // TODO: Disable board interactions after victory or defeat.
 }
 
 /**
@@ -86,14 +102,14 @@ export function attachEventHandlers(handlers) {
   // Delegation survives cell replacement; assigning handlers avoids duplicates.
   boardElement.onclick = (event) => {
     const cell = event.target.closest('button.cell');
-    if (cell && boardElement.contains(cell)) {
+    if (cell && !cell.disabled && boardElement.contains(cell)) {
       handlers.onReveal(Number(cell.dataset.row), Number(cell.dataset.column));
     }
   };
   boardElement.oncontextmenu = (event) => {
     event.preventDefault();
     const cell = event.target.closest('button.cell');
-    if (cell && boardElement.contains(cell)) {
+    if (cell && !cell.disabled && boardElement.contains(cell)) {
       handlers.onFlag(Number(cell.dataset.row), Number(cell.dataset.column));
     }
   };

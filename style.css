@@ -114,6 +114,27 @@ button:disabled {
   opacity: 0.6;
 }
 
+.cell:disabled {
+  opacity: 1;
+}
+
+.cell.is-liar {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+  color: #5b4775;
+  background: #eee6f5;
+  border: 2px solid #a28ab8;
+  font-size: clamp(0.55rem, 2.1vw, 0.75rem);
+}
+
+#game-result {
+  padding: 1rem;
+  background: #eee6f5;
+  border-radius: 0.5rem;
+}
+
 #rules {
   max-width: 42rem;
 }

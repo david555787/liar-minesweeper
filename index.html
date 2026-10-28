@@ -18,7 +18,7 @@
         <div><dt>Mines</dt><dd id="mines">10</dd></div>
         <div><dt>Flags</dt><dd id="flags">0</dd></div>
         <div><dt>Mode</dt><dd id="mode">Reveal</dd></div>
-        <div><dt>Status</dt><dd id="status">Ready — choose a cell.</dd></div>
+        <div><dt>Status</dt><dd id="status">Playing — choose a cell.</dd></div>
       </dl>
 
       <div id="controls">
@@ -27,12 +27,14 @@
       </div>
 
       <div id="board" aria-label="Minesweeper board"></div>
+      <p id="game-result" role="status" hidden></p>
 
       <section id="rules" aria-labelledby="rules-heading">
         <h2 id="rules-heading">Rules &amp; controls</h2>
         <p>Left-click to reveal; right-click to flag or unflag. Unflag a cell before revealing it. Your first reveal is safe.</p>
         <p>Exactly one safe cell lies by +1 or −1. Flood fill follows true values, so a true zero expands even if its clue says 1.</p>
-        <p>This version supports revealing and flagging. Verification, lives, and win/defeat are coming next; the lives and verification counters stay at their initial values.</p>
+        <p>You have 5 lives. Each newly revealed mine costs one life. Reveal every safe cell to win; finding the liar is optional. At the end, all mines and the liar's original clue are shown.</p>
+        <p>Verification is coming next; its counter stays at 3 for now.</p>
       </section>
     </main>
   </body>
