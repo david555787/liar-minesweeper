@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createBoardFromFixedLayout } from './board.js';
-import { gameState, newGame, handleReveal, handleFlag, handleVerify } from './game.js';
+import { gameState, newGame, handleReveal, handleFlag, handleVerify, getStatusSummary } from './game.js';
 
 let passedTests = 0;
 const mineCoordinates = [[0, 0], [0, 2], [0, 4], [0, 6], [0, 8],
@@ -325,5 +325,58 @@ for (const outcome of ['won', 'lost']) {
     assert.equal(JSON.stringify(gameState), originalState);
   });
 }
+
+test('status summary matches state after flag, unflag, reveal, mine hit, verify, and New Game', () => {
+  loadControlledBoard();
+  const checkSummary = (expected) => {
+    const stateBeforeSummary = JSON.stringify(gameState);
+    const summary = getStatusSummary(gameState);
+    assert.deepEqual(summary, {
+      lives: gameState.lives,
+      verificationsLeft: gameState.verificationsLeft,
+      mineCount: gameState.mineCount,
+      flagCount: gameState.flagCount,
+      mode: gameState.mode,
+      status: gameState.status,
+      message: gameState.message,
+      debugMode: gameState.debugMode,
+    });
+    assert.deepEqual(
+      [summary.lives, summary.verificationsLeft, summary.mineCount,
+        summary.flagCount, summary.mode, summary.status], expected,
+    );
+    assert.equal(summary.flagCount, gameState.board.flat().filter(cell => cell.isFlagged).length);
+    assert.equal(JSON.stringify(gameState), stateBeforeSummary);
+  };
+  checkSummary([5, 3, 10, 0, 'reveal', 'playing']);
+  handleFlag(0, 0);
+  checkSummary([5, 3, 10, 1, 'reveal', 'playing']);
+  handleFlag(0, 0);
+  checkSummary([5, 3, 10, 0, 'reveal', 'playing']);
+  handleReveal(1, 1);
+  checkSummary([5, 3, 10, 0, 'reveal', 'playing']);
+  handleReveal(0, 0);
+  checkSummary([4, 3, 10, 0, 'reveal', 'playing']);
+  handleVerify();
+  checkSummary([4, 3, 10, 0, 'verify', 'playing']);
+  handleReveal(0, 0);
+  checkSummary([4, 3, 10, 0, 'verify', 'playing']);
+  handleReveal(1, 1);
+  checkSummary([4, 2, 10, 0, 'reveal', 'playing']);
+  handleVerify();
+  checkSummary([4, 2, 10, 0, 'verify', 'playing']);
+  handleVerify();
+  checkSummary([4, 2, 10, 0, 'reveal', 'playing']);
+  for (const [row, column] of mineCoordinates.slice(1, 5)) handleReveal(row, column);
+  checkSummary([0, 2, 10, 0, 'reveal', 'lost']);
+  newGame();
+  checkSummary([5, 3, 10, 0, 'reveal', 'playing']);
+  loadControlledBoard();
+  leaveLastSafeCellCovered();
+  handleReveal(1, 1);
+  checkSummary([5, 3, 10, 0, 'reveal', 'won']);
+  newGame();
+  checkSummary([5, 3, 10, 0, 'reveal', 'playing']);
+});
 
 console.log(`\n${passedTests} tests passed.`);

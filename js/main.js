@@ -51,8 +51,7 @@ function runAction(action, ...coordinates) {
   renderGame(gameState);
 }
 
-newGame();
-renderGame(gameState);
+runAction(newGame);
 attachEventHandlers({
   onReveal: (row, column) => runAction(handleReveal, row, column),
   onFlag: (row, column) => runAction(handleFlag, row, column),

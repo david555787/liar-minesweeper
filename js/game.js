@@ -26,6 +26,20 @@ export const gameState = {
   debugError: '',
 };
 
+/** Expose current status without caching counters that could drift from state. */
+export function getStatusSummary(state) {
+  return {
+    lives: state.lives,
+    verificationsLeft: state.verificationsLeft,
+    mineCount: state.mineCount,
+    flagCount: state.flagCount,
+    mode: state.mode,
+    status: state.status,
+    message: state.message,
+    debugMode: state.debugMode,
+  };
+}
+
 /** Reset a session without generating mines before the player's first reveal. */
 export function newGame() {
   // Preserve debug configuration so New Game can reproduce the same fixture.

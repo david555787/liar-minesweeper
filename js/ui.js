@@ -1,3 +1,5 @@
+import { getStatusSummary } from './game.js';
+
 /** Keep page updates separate so rendering cannot alter the game's deductions. */
 export function renderGame(gameState) {
   renderBoard(gameState);
@@ -89,18 +91,21 @@ export function renderBoard(gameState) {
 
 /** Reflect state consistently so counters never imply a different ruleset. */
 export function renderStatus(gameState) {
-  document.getElementById('lives').textContent = gameState.lives;
-  document.getElementById('verifications-left').textContent = gameState.verificationsLeft;
-  document.getElementById('mines').textContent = gameState.mineCount;
-  document.getElementById('flags').textContent = gameState.flagCount;
-  const modeLabel = gameState.mode === 'verify' ? 'Verify' : 'Reveal';
-  document.getElementById('mode').textContent = gameState.debugMode ? `${modeLabel} (debug)` : modeLabel;
-  const statusLabel = { playing: 'Playing', won: 'Won', lost: 'Lost' }[gameState.status];
-  document.getElementById('status').textContent = `${statusLabel} — ${gameState.message}`;
+  // Re-render every status field from state after each action so early returns,
+  // mode changes, game endings, and resets cannot leave an old counter on screen.
+  const summary = getStatusSummary(gameState);
+  document.getElementById('lives').textContent = summary.lives;
+  document.getElementById('verifications-left').textContent = summary.verificationsLeft;
+  document.getElementById('mines').textContent = summary.mineCount;
+  document.getElementById('flags').textContent = summary.flagCount;
+  const modeLabel = summary.mode === 'verify' ? 'Verify' : 'Reveal';
+  document.getElementById('mode').textContent = summary.debugMode ? `${modeLabel} (debug)` : modeLabel;
+  const statusLabel = { playing: 'Playing', won: 'Won', lost: 'Lost' }[summary.status];
+  document.getElementById('status').textContent = `${statusLabel} — ${summary.message}`;
   const verifyButton = document.getElementById('verify-button');
-  verifyButton.disabled = gameState.status !== 'playing' || gameState.verificationsLeft === 0;
-  verifyButton.setAttribute('aria-pressed', String(gameState.mode === 'verify'));
-  verifyButton.title = gameState.mode === 'verify'
+  verifyButton.disabled = summary.status !== 'playing' || summary.verificationsLeft === 0;
+  verifyButton.setAttribute('aria-pressed', String(summary.mode === 'verify'));
+  verifyButton.title = summary.mode === 'verify'
     ? 'Cancel verification without using a verification.' : 'Check a revealed safe cell’s true value.';
 }
 

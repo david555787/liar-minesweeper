@@ -29,13 +29,15 @@
       <div id="board" aria-label="Minesweeper board"></div>
       <p id="game-result" role="status" hidden></p>
 
-      <section id="rules" aria-labelledby="rules-heading">
-        <h2 id="rules-heading">Rules &amp; controls</h2>
-        <p>Left-click to reveal; right-click to flag or unflag. Unflag a cell before revealing it. Your first reveal is safe.</p>
-        <p>Exactly one safe cell lies by +1 or −1. Flood fill follows true values, so a true zero expands even if its clue says 1.</p>
-        <p>You have 5 lives. Each newly revealed mine costs one life. Reveal every safe cell to win; finding the liar is optional. At the end, all mines and the liar's original clue are shown.</p>
-        <p>You have 3 verifications. Click Verify, then a revealed safe cell to see its true value and a permanent ✓ marker. Click Verify again to cancel for free. Covered cells, mines, and already verified cells use nothing and leave verification mode on. Verification never opens neighbors.</p>
-      </section>
+      <details id="rules">
+        <summary id="rules-heading">Rules &amp; controls — meet the mischievous clue</summary>
+        <p><strong>One little fib.</strong> Exactly one safe cell shows a wrong number, off by exactly 1 (+1 or −1). Every other clue counts neighboring mines, including diagonals.</p>
+        <p><strong>Clicks &amp; notes.</strong> Left-click to reveal; right-click to flag or unflag a covered cell. Unflag it before revealing. Flags are just your own notes and are never checked. Your first reveal is safe; its neighbors might not be!</p>
+        <p><strong>Watch what opens.</strong> Flood fill uses <strong>true values</strong>: a true-0 liar showing 1 still expands, while a true-1 liar showing 0 does not. That can be a clue! A liar displaying zero shows an explicit “0”; an ordinary, unverified true-0 cell is blank.</p>
+        <p><strong>Check a clue.</strong> You have 3 verifications per game. Click Verify, then a revealed safe number (or blank) to show its true value with a permanent ✓ mark. Verify mode then turns off. Click Verify again to cancel for free. Covered cells, mines, and already verified cells use nothing and leave verify mode on. Verification never opens neighbors.</p>
+        <p><strong>Room for mistakes.</strong> You start with 5 lives. Each newly revealed mine costs 1 life; the 5th distinct mine hit ends the game. Clicking a hit mine again costs nothing.</p>
+        <p><strong>Clear the board.</strong> Reveal every non-mine cell to win. Finding the liar is optional; flagging mines alone does not win. At the end, all mines and both the liar's true and original displayed values are shown. New Game gives you a fresh start. Take your time!</p>
+      </details>
     </main>
   </body>
 </html>

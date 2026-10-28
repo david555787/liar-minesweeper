@@ -155,4 +155,16 @@ button:disabled {
 
 #rules {
   max-width: 42rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid #dce5df;
+}
+
+#rules summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#rules summary:focus-visible {
+  outline: 2px solid #467a69;
+  outline-offset: 3px;
 }
